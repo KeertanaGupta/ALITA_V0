@@ -1,0 +1,17 @@
+# Environments
+venv_django/
+venv_ai/
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+
+# DB and AI
+*.sqlite3
+*.db
+faiss_index/
+models/
+
+# Environment variables
+.env
