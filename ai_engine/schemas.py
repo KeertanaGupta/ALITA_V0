@@ -11,3 +11,10 @@ class DocumentProcessResponse(BaseModel):
     extracted_length: int
     total_chunks: int
     message: str
+
+class ChatRequest(BaseModel):
+    question: str
+
+class ChatResponse(BaseModel):
+    answer: str
+    sources: list[dict]
