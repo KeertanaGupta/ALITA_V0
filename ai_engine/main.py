@@ -4,6 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 # Import our custom logic
 from schemas import DocumentProcessRequest, DocumentProcessResponse
 from services.document_processor import extract_text_from_pdf
+from services.chunking_service import chunk_document_text # <--- IMPORT THE CHUNKER
+from services.vector_store import embed_and_store
 
 app = FastAPI(
     title="ALITA AI Engine",
@@ -25,24 +27,31 @@ async def health_check():
 
 @app.post("/api/v1/process-document", response_model=DocumentProcessResponse)
 async def process_document(request: DocumentProcessRequest):
-    """
-    Receives a request from Django to process a newly uploaded document.
-    """
     try:
         # Step 1: Extract Text
         raw_text = extract_text_from_pdf(request.file_path)
         text_length = len(raw_text)
         
-        # TODO: Step 2: Chunking
-        # TODO: Step 3: Embedding
-        # TODO: Step 4: Save to FAISS
+        # Step 2: Chunking
+        chunks = chunk_document_text(raw_text)
+        total_chunks = len(chunks)
         
-        # For now, we return success if we successfully ripped the text
+        # Step 3 & 4: Embeddings & Save to FAISS Vector DB
+        success = embed_and_store(
+            chunks=chunks, 
+            document_id=request.document_id, 
+            project_id=request.project_id
+        )
+        
+        if not success:
+            raise ValueError("Failed to generate and store embeddings.")
+        
         return DocumentProcessResponse(
             document_id=request.document_id,
             status="SUCCESS",
             extracted_length=text_length,
-            message="Text extracted successfully."
+            total_chunks=total_chunks,
+            message="Document fully processed, embedded, and stored in FAISS."
         )
         
     except FileNotFoundError as e:
