@@ -71,23 +71,34 @@ async def process_document(request: DocumentProcessRequest):
 @app.post("/api/v1/chat", response_model=ChatResponse)
 async def chat_with_document(request: ChatRequest):
     """
-    The main RAG pipeline: Retrieves context from FAISS, then generates an answer with Ollama.
+    The main RAG pipeline with Metadata Filtering.
     """
     try:
-        # 1. Check if we have a database
         if not os.path.exists(FAISS_INDEX_PATH):
             raise HTTPException(status_code=400, detail="No documents have been indexed yet.")
             
-        # 2. Retrieve the context (The Librarian)
         vectorstore = FAISS.load_local(FAISS_INDEX_PATH, embed_model, allow_dangerous_deserialization=True)
-        # We fetch top 3 chunks to give the LLM maximum context
-        results = vectorstore.similarity_search(request.question, k=3) 
         
-        # 3. Extract the text and metadata
+        # Build our search parameters
+        search_kwargs = {"k": 3}
+        
+        # If the user selected a specific project, apply the FAISS Metadata Filter!
+        if request.project_id and request.project_id != "all":
+            search_kwargs["filter"] = {"project_id": request.project_id}
+            
+        # Execute the filtered search
+        results = vectorstore.similarity_search(request.question, **search_kwargs) 
+        
         context_texts = [doc.page_content for doc in results]
         sources = [doc.metadata for doc in results]
         
-        # 4. Generate the answer (The Brain)
+        # If the filter returned no results, stop the LLM from guessing
+        if not context_texts and request.project_id != "all":
+            return ChatResponse(
+                answer="I couldn't find any information about that in this specific project.",
+                sources=[]
+            )
+        
         answer = generate_answer(request.question, context_texts)
         
         return ChatResponse(

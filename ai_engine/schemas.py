@@ -14,6 +14,7 @@ class DocumentProcessResponse(BaseModel):
 
 class ChatRequest(BaseModel):
     question: str
+    project_id: str = "all"  # Defaults to "all" if not provided
 
 class ChatResponse(BaseModel):
     answer: str
