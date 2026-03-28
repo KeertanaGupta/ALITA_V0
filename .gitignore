@@ -15,3 +15,4 @@ models/
 
 # Environment variables
 .env
+backend_core/media/

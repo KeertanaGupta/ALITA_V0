@@ -8,8 +8,8 @@ def chunk_document_text(raw_text: str) -> list[str]:
     """
     # Initialize the text splitter
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=2000,      # roughly 500 tokens
-        chunk_overlap=400,    # roughly 100 tokens overlap to maintain context between chunks
+        chunk_size=1000,      # roughly 500 tokens
+        chunk_overlap=300,    # roughly 100 tokens overlap to maintain context between chunks
         length_function=len,
         separators=["\n\n", "\n", " ", ""] # Tries to split by paragraphs first, then sentences
     )

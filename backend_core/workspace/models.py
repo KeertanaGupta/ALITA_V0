@@ -1,5 +1,8 @@
 from django.db import models
 import uuid
+import os                                           # <-- NEW IMPORT
+from django.db.models.signals import post_delete    # <-- NEW IMPORT
+from django.dispatch import receiver                # <-- NEW IMPORT
 
 class Project(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -33,3 +36,16 @@ class Document(models.Model):
 
     def __str__(self):
         return self.filename
+
+# ==========================================
+# NEW AUTO-DELETE SIGNAL
+# ==========================================
+@receiver(post_delete, sender=Document)
+def auto_delete_file_on_delete(sender, instance, **kwargs):
+    """
+    Deletes the physical PDF file from the hard drive 
+    whenever a Document is deleted from the UI/Database.
+    """
+    if instance.file:
+        if os.path.isfile(instance.file.path):
+            os.remove(instance.file.path)

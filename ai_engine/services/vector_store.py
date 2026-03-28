@@ -1,13 +1,12 @@
-from langchain_community.embeddings import HuggingFaceBgeEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
+from langchain_huggingface import HuggingFaceEmbeddings
 import os
 
-# 1. Initialize the Embedding Model (BGE-Small)
-# We set normalize_embeddings=True to use Cosine Similarity, as specified in your blueprint.
-embed_model = HuggingFaceBgeEmbeddings(
+# This will now successfully route the heavy math to your RTX 5050!
+embed_model = HuggingFaceEmbeddings(
     model_name="BAAI/bge-small-en-v1.5",
-    model_kwargs={'device': 'cpu'}, # We will use CPU for embeddings to save GPU VRAM for the LLM later
+    model_kwargs={'device': 'cpu'}, 
     encode_kwargs={'normalize_embeddings': True}
 )
 
