@@ -1,20 +1,36 @@
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-def chunk_document_text(raw_text: str) -> list[str]:
+
+def chunk_document_text(raw_text: str) -> list[dict]:
     """
-    Takes raw extracted text and splits it into semantic chunks using LangChain.
-    We approximate 1 token to 4 characters.
-    Blueprint specs: 500 tokens (~2000 chars) size, 100 tokens (~400 chars) overlap.
+    Parent-child chunking strategy.
+    - Parent (2000 tokens, 300 overlap): large semantic blocks for LLM context.
+      Keeps full definitions, theorems, and explanations intact.
+    - Child (600 tokens, 150 overlap): smaller precise chunks for embedding & retrieval.
+      Overlap increased to 150 so definitions split across boundaries are still found.
     """
-    # Initialize the text splitter
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000,      # roughly 500 tokens
-        chunk_overlap=300,    # roughly 100 tokens overlap to maintain context between chunks
-        length_function=len,
-        separators=["\n\n", "\n", " ", ""] # Tries to split by paragraphs first, then sentences
+    parent_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=2000,
+        chunk_overlap=300,
+        separators=["\n\n", "\n", ".", " "]
     )
-    
-    # Generate the chunks
-    chunks = text_splitter.split_text(raw_text)
-    
-    return chunks
+
+    child_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=600,
+        chunk_overlap=150,
+        separators=["\n\n", "\n", ".", " "]
+    )
+
+    parent_chunks = parent_splitter.split_text(raw_text)
+
+    result = []
+    for parent_idx, parent_text in enumerate(parent_chunks):
+        child_chunks = child_splitter.split_text(parent_text)
+        for child in child_chunks:
+            result.append({
+                "child": child,
+                "parent": parent_text,
+                "parent_index": parent_idx
+            })
+
+    return result
