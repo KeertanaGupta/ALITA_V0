@@ -139,3 +139,4 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # CORS Configuration
 CORS_ALLOW_ALL_ORIGINS = True # We will restrict this to specific domains during production deployment
+X_FRAME_OPTIONS = 'ALLOWALL'
