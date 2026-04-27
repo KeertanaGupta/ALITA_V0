@@ -1,0 +1,114 @@
+E:\clonealita\ALITA_V0\venv\Lib\site-packages\torch\cuda\__init__.py:235: UserWarning: 
+NVIDIA GeForce RTX 5050 Laptop GPU with CUDA capability sm_120 is not compatible with the current PyTorch installation.
+The current PyTorch install supports CUDA capabilities sm_50 sm_60 sm_61 sm_70 sm_75 sm_80 sm_86 sm_90.
+If you want to use the NVIDIA GeForce RTX 5050 Laptop GPU GPU with PyTorch, please check the instructions at https://pytorch.org/get-started/locally/
+
+  warnings.warn(
+[ALITA] Embedding device: CUDA
+[ALITA] Main Embedding device: CUDA
+[ALITA] Loading cross-encoder reranker...
+Loading weights:   0%|          | 0/105 [00:00<?, ?it/s]Loading weights: 100%|##########| 105/105 [00:00<00:00, 10179.64it/s]
+[1mBertForSequenceClassification LOAD REPORT[0m from: cross-encoder/ms-marco-MiniLM-L-6-v2
+Key                          | Status     |  | 
+-----------------------------+------------+--+-
+bert.embeddings.position_ids | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Failed to import jpype dependencies. Fallback to subprocess.
+No module named 'jpype'
+E:\clonealita\ALITA_V0\ai_engine\services\vector_store.py:49: LangChainDeprecationWarning: The class `HuggingFaceEmbeddings` was deprecated in LangChain 0.2.2 and will be removed in 1.0. An updated version of the class exists in the `langchain-huggingface package and should be used instead. To use it run `pip install -U `langchain-huggingface` and import as `from `langchain_huggingface import HuggingFaceEmbeddings``.
+  _embed_model = HuggingFaceEmbeddings(
+[ALITA] Reranker ready.
+[ALITA] Ingesting 'test_doc.pdf' | owner_name='UNKNOWN' | kind='technical'
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|##########| 199/199 [00:00<00:00, 10399.92it/s]
+[1mBertModel LOAD REPORT[0m from: BAAI/bge-small-en-v1.5
+Key                     | Status     |  | 
+------------------------+------------+--+-
+embeddings.position_ids | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+Traceback (most recent call last):
+  File "E:\clonealita\ALITA_V0\ai_engine\services\vector_store.py", line 409, in embed_and_store
+    vectorstore = FAISS.from_documents(new_documents, get_embed_model())
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\clonealita\ALITA_V0\venv\Lib\site-packages\langchain_core\vectorstores\base.py", line 814, in from_documents
+    return cls.from_texts(texts, embedding, metadatas=metadatas, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\clonealita\ALITA_V0\venv\Lib\site-packages\langchain_community\vectorstores\faiss.py", line 1043, in from_texts
+    embeddings = embedding.embed_documents(texts)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\clonealita\ALITA_V0\venv\Lib\site-packages\langchain_community\embeddings\huggingface.py", line 115, in embed_documents
+    embeddings = self.client.encode(
+                 ^^^^^^^^^^^^^^^^^^^
+  File "E:\clonealita\ALITA_V0\venv\Lib\site-packages\torch\utils\_contextlib.py", line 116, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "E:\clonealita\ALITA_V0\venv\Lib\site-packages\sentence_transformers\SentenceTransformer.py", line 1112, in encode
+    out_features = self.forward(features, **kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\clonealita\ALITA_V0\venv\Lib\site-packages\sentence_transformers\SentenceTransformer.py", line 1193, in forward
+    input = module(input, **module_kwargs)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\clonealita\ALITA_V0\venv\Lib\site-packages\torch\nn\modules\module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\clonealita\ALITA_V0\venv\Lib\site-packages\torch\nn\modules\module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\clonealita\ALITA_V0\venv\Lib\site-packages\sentence_transformers\models\Transformer.py", line 317, in forward
+    outputs = self.auto_model(**trans_features, **kwargs, return_dict=True)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\clonealita\ALITA_V0\venv\Lib\site-packages\torch\nn\modules\module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\clonealita\ALITA_V0\venv\Lib\site-packages\torch\nn\modules\module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\clonealita\ALITA_V0\venv\Lib\site-packages\transformers\utils\generic.py", line 931, in wrapper
+    output = func(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\clonealita\ALITA_V0\venv\Lib\site-packages\transformers\utils\output_capturing.py", line 248, in wrapper
+    outputs = func(self, *args, **kwargs)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\clonealita\ALITA_V0\venv\Lib\site-packages\transformers\models\bert\modeling_bert.py", line 658, in forward
+    embedding_output = self.embeddings(
+                       ^^^^^^^^^^^^^^^^
+  File "E:\clonealita\ALITA_V0\venv\Lib\site-packages\torch\nn\modules\module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\clonealita\ALITA_V0\venv\Lib\site-packages\torch\nn\modules\module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\clonealita\ALITA_V0\venv\Lib\site-packages\transformers\models\bert\modeling_bert.py", line 103, in forward
+    inputs_embeds = self.word_embeddings(input_ids)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\clonealita\ALITA_V0\venv\Lib\site-packages\torch\nn\modules\module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\clonealita\ALITA_V0\venv\Lib\site-packages\torch\nn\modules\module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\clonealita\ALITA_V0\venv\Lib\site-packages\torch\nn\modules\sparse.py", line 190, in forward
+    return F.embedding(
+           ^^^^^^^^^^^^
+  File "E:\clonealita\ALITA_V0\venv\Lib\site-packages\torch\nn\functional.py", line 2551, in embedding
+    return torch.embedding(weight, input, padding_idx, scale_grad_by_freq, sparse)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: CUDA error: no kernel image is available for execution on the device
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+Traceback (most recent call last):
+  File "E:\clonealita\ALITA_V0\ai_engine\main.py", line 943, in process_document
+    raise ValueError("Failed to generate and store embeddings.")
+ValueError: Failed to generate and store embeddings.
+[ALITA] embed_and_store failed: CUDA error: no kernel image is available for execution on the device
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+{"event": "process_document_error", "ts": 1777278202.427, "error": "Failed to generate and store embeddings."}

@@ -15,6 +15,8 @@ class DocumentProcessResponse(BaseModel):
 class ChatRequest(BaseModel):
     question: str
     project_id: str = "all"  # Defaults to "all" if not provided
+    document_ids: list[str] | None = None
+    image_data: str | None = None  # Base64 encoded image string
 
 class ChatResponse(BaseModel):
     answer: str

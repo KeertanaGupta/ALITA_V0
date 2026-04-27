@@ -50,8 +50,15 @@ export const processDocumentFastAPI = async (documentId, projectId, filePath) =>
   return res.data;
 };
 
-export const askAlita = async (question, projectId = 'all') => {
-  const res = await axios.post(`${FASTAPI_URL}/chat`, { question, project_id: projectId });
+export const askAlita = async (question, projectId = 'all', documentIds = null, imageData = null) => {
+  const payload = { question, project_id: projectId };
+  if (documentIds && documentIds.length > 0) {
+    payload.document_ids = documentIds;
+  }
+  if (imageData) {
+    payload.image_data = imageData;
+  }
+  const res = await axios.post(`${FASTAPI_URL}/chat`, payload);
   return res.data;
 };
 

@@ -22,7 +22,17 @@ from services.entity_service import clean_line, extract_candidate_entities
 # ---------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------
-device = "cuda" if torch.cuda.is_available() else "cpu"
+device = "cpu"
+if torch.cuda.is_available():
+    cap = torch.cuda.get_device_capability()
+    if cap[0] < 10:  # Anything sm_100+ requires newer PyTorch. RTX 50xx is sm_120.
+        try:
+            _ = torch.nn.functional.embedding(torch.tensor([[0]]).cuda(), torch.zeros(1, 1).cuda())
+            device = "cuda"
+        except Exception:
+            pass
+
+device = os.getenv("ALITA_DEVICE", device)
 print(f"[ALITA] Embedding device: {device.upper()}")
 
 FAISS_INDEX_PATH = "faiss_index"
@@ -404,6 +414,8 @@ def embed_and_store(
         _write_manifest_records(existing_records + new_records)
         return True
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         print(f"[ALITA] embed_and_store failed: {e}")
         return False
 

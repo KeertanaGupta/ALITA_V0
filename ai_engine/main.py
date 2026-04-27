@@ -68,8 +68,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+import torch
+
+def _get_torch_device():
+    device = "cpu"
+    if torch.cuda.is_available():
+        try:
+            _ = torch.zeros(1).cuda()
+            device = "cuda"
+        except Exception:
+            pass
+    return os.getenv("ALITA_DEVICE", device)
+
+_main_device = _get_torch_device()
+print(f"[ALITA] Main Embedding device: {_main_device.upper()}")
+
 print("[ALITA] Loading cross-encoder reranker...")
-reranker = CrossEncoder(RERANKER_NAME)
+reranker = CrossEncoder(RERANKER_NAME, device=_main_device)
 print("[ALITA] Reranker ready.")
 
 
@@ -144,7 +159,12 @@ def _request_project_filter(project_id: str | None) -> str | None:
     return str(project_id).strip().lower()
 
 
-def _doc_project_match(doc, project_id: str | None) -> bool:
+def _doc_project_match(doc, project_id: str | None, document_ids: list[str] | None = None) -> bool:
+    if document_ids is not None:
+        doc_id = str(doc.metadata.get("document_id", "")).strip()
+        if doc_id not in document_ids:
+            return False
+
     target = _request_project_filter(project_id)
     if target is None:
         return True
@@ -238,11 +258,11 @@ def _all_docs_from_vectorstore(vectorstore) -> list:
     return []
 
 
-def _get_global_docs(project_id: str | None = None) -> list:
+def _get_global_docs(project_id: str | None = None, document_ids: list[str] | None = None) -> list:
     vectorstore = _get_vectorstore()
     docs = _all_docs_from_vectorstore(vectorstore)
-    if project_id:
-        docs = [d for d in docs if _doc_project_match(d, project_id)]
+    if project_id or document_ids:
+        docs = [d for d in docs if _doc_project_match(d, project_id, document_ids)]
     return docs
 
 
@@ -665,7 +685,7 @@ def _rank_candidates(question: str, q_type: str, candidates: list) -> list:
     return [doc for doc, _, _ in ranked]
 
 
-def _dense_and_sparse_retrieval(vectorstore, bm25, question: str, q_type: str, project_id: str | None):
+def _dense_and_sparse_retrieval(vectorstore, bm25, question: str, q_type: str, project_id: str | None, document_ids: list[str] | None = None):
     dynamic_k = 30 if q_type == "comparison" else 20 if is_explanatory(question) else 10
     dense_k = dynamic_k * 3
     sparse_k = min(MAX_BM25_CANDIDATES, max(10, dynamic_k * 2))
@@ -683,7 +703,7 @@ def _dense_and_sparse_retrieval(vectorstore, bm25, question: str, q_type: str, p
             dense_hits = vectorstore.similarity_search(q, k=dense_k)
 
         for rank, doc in enumerate(dense_hits):
-            if not _doc_project_match(doc, project_id):
+            if not _doc_project_match(doc, project_id, document_ids):
                 continue
             key = _doc_key(doc)
             docs_by_key[key] = doc
@@ -698,7 +718,7 @@ def _dense_and_sparse_retrieval(vectorstore, bm25, question: str, q_type: str, p
             sparse_hits = []
 
         for rank, doc in enumerate(sparse_hits[:sparse_k]):
-            if not _doc_project_match(doc, project_id):
+            if not _doc_project_match(doc, project_id, document_ids):
                 continue
             key = _doc_key(doc)
             docs_by_key[key] = doc
@@ -718,7 +738,7 @@ def _dense_and_sparse_retrieval(vectorstore, bm25, question: str, q_type: str, p
         except Exception:
             broad = []
         for doc in broad:
-            if not _doc_project_match(doc, project_id):
+            if not _doc_project_match(doc, project_id, document_ids):
                 continue
             key = _doc_key(doc)
             docs_by_key[key] = doc
@@ -974,12 +994,18 @@ async def get_system_stats():
 @app.post("/api/v1/chat", response_model=ChatResponse)
 async def chat_with_document(request: ChatRequest):
     try:
+        if request.image_data:
+            from services.llm_service import generate_vision_answer
+            vision_answer = generate_vision_answer(request.question, request.image_data)
+            return ChatResponse(answer=vision_answer, sources=[])
+
         if not os.path.exists(vs.FAISS_INDEX_PATH):
             raise HTTPException(status_code=400, detail="No documents have been indexed yet.")
 
         cache_key = (
             normalize_text(request.question),
             str(getattr(request, "project_id", None) or "all"),
+            str(",".join(sorted(getattr(request, "document_ids", None) or []))),
             APP_VERSION,
             _vectorstore_signature(),
         )
@@ -1014,7 +1040,7 @@ async def chat_with_document(request: ChatRequest):
 
         # Fast-path for explicit people questions.
         if explicit_entity and q_type in {"conversational", "extraction", "factual"}:
-            all_docs = _get_global_docs(project_filter)
+            all_docs = _get_global_docs(project_filter, getattr(request, "document_ids", None))
             matched_docs = _docs_matching_entity(all_docs, explicit_entity)
             if matched_docs:
                 context_texts, sources = build_entity_filtered_context(matched_docs, explicit_entity)
@@ -1061,6 +1087,7 @@ async def chat_with_document(request: ChatRequest):
             question=query_bundle[0],
             q_type=q_type,
             project_id=project_filter,
+            document_ids=getattr(request, "document_ids", None),
         )
 
         if len(query_bundle) > 1:
@@ -1070,6 +1097,7 @@ async def chat_with_document(request: ChatRequest):
                 question=query_bundle[1],
                 q_type=q_type,
                 project_id=project_filter,
+                document_ids=getattr(request, "document_ids", None),
             )
             merged = []
             seen = set()

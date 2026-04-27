@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Database, FileText, Trash2, Loader2, Search, Filter } from 'lucide-react';
 import { fetchDocuments, deleteDocument } from '../api';
+import { useNavigate } from 'react-router-dom';
 
 export default function KnowledgeBase() {
   const [documents, setDocuments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedDocs, setSelectedDocs] = useState([]);
+  const navigate = useNavigate();
   
   // States for our Filters!
   const [searchQuery, setSearchQuery] = useState('');
@@ -43,6 +46,18 @@ export default function KnowledgeBase() {
     const matchesStatus = statusFilter === 'ALL' || doc.processing_status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  const toggleSelectDoc = (docId) => {
+    setSelectedDocs(prev => prev.includes(docId) ? prev.filter(id => id !== docId) : [...prev, docId]);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedDocs.length === filteredDocs.length && filteredDocs.length > 0) {
+      setSelectedDocs([]);
+    } else {
+      setSelectedDocs(filteredDocs.map(d => d.id));
+    }
+  };
 
   return (
     <div className="animate-in fade-in duration-500 pb-12 h-full flex flex-col">
@@ -93,6 +108,14 @@ export default function KnowledgeBase() {
           <table className="w-full text-left border-collapse">
             <thead className="sticky top-0 bg-background z-10">
               <tr className="border-b border-panel-border text-xs uppercase tracking-wider text-text-muted">
+                <th className="p-4 w-12 text-center">
+                  <input 
+                    type="checkbox" 
+                    checked={selectedDocs.length > 0 && selectedDocs.length === filteredDocs.length} 
+                    onChange={toggleSelectAll} 
+                    className="w-4 h-4 rounded border-panel-border text-primary focus:ring-primary/50 cursor-pointer" 
+                  />
+                </th>
                 <th className="p-4 font-semibold">Document Name</th>
                 <th className="p-4 font-semibold">Project ID</th>
                 <th className="p-4 font-semibold">Status</th>
@@ -110,7 +133,7 @@ export default function KnowledgeBase() {
                 </tr>
               ) : filteredDocs.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="p-12 text-center text-text-muted">
+                  <td colSpan="6" className="p-12 text-center text-text-muted">
                     <Database size={40} className="mx-auto mb-4 opacity-30" />
                     <p>No documents found matching your filters.</p>
                   </td>
@@ -118,6 +141,14 @@ export default function KnowledgeBase() {
               ) : (
                 filteredDocs.map((doc) => (
                   <tr key={doc.id} className="hover:bg-background/50 transition-colors group">
+                    <td className="p-4 w-12 text-center" onClick={(e) => e.stopPropagation()}>
+                      <input 
+                        type="checkbox" 
+                        checked={selectedDocs.includes(doc.id)} 
+                        onChange={() => toggleSelectDoc(doc.id)} 
+                        className="w-4 h-4 rounded border-panel-border text-primary focus:ring-primary/50 cursor-pointer" 
+                      />
+                    </td>
                     <td className="p-4">
                       <div className="flex items-center space-x-3">
                         <div className="h-8 w-8 rounded bg-blue-500/10 flex items-center justify-center shrink-0">
@@ -155,6 +186,24 @@ export default function KnowledgeBase() {
           </table>
         </div>
       </div>
+
+      {/* Floating Action Bar for Comparison */}
+      {selectedDocs.length >= 2 && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-panel border border-primary/30 shadow-2xl rounded-2xl p-4 flex items-center space-x-6 z-[60] animate-in slide-in-from-bottom-8 fade-in">
+          <div className="flex items-center space-x-3 text-text-main">
+            <div className="bg-primary/20 text-primary w-8 h-8 rounded-full flex items-center justify-center font-bold">
+              {selectedDocs.length}
+            </div>
+            <span className="font-medium">Documents Selected</span>
+          </div>
+          <button 
+            onClick={() => navigate('/insight', { state: { compareDocumentIds: selectedDocs } })}
+            className="bg-primary hover:bg-primary-hover text-white px-6 py-2.5 rounded-xl font-medium transition-all shadow-lg hover:shadow-primary/25 border border-white/10"
+          >
+            Compare Selected
+          </button>
+        </div>
+      )}
     </div>
   );
 }
