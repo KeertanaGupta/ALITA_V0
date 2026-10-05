@@ -17,3 +17,7 @@ models/
 # Environment variables
 .env
 backend_core/media/
+
+# Debug / scratch output
+ai_engine/*.txt
+!ai_engine/requirements.txt
